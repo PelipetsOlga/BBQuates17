@@ -7,21 +7,21 @@
 
 import SwiftUI
 
-struct QuoteView: View {
+struct FetchView: View {
     let vm = ViewModel()
     let show: String
-    
+
     @State var showCharacterView = false
 
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                Image(show.lowercased().replacingOccurrences(of: " ", with: ""))
+                Image(show.removeCaseAndSpace())
                     .resizable()
                     .frame(
                         width: geo.size.width * 2.7,
                         height: geo.size.height * 1.2)
-                
+
                 VStack {
                     VStack {
                         Spacer(minLength: 60)
@@ -30,8 +30,8 @@ struct QuoteView: View {
                             EmptyView()
                         case .fetching:
                             ProgressView()
-                        case .success:
-                            
+                        case .successQuate:
+
                             Text("\"\(vm.quote.quote)\"")
                                 .minimumScaleFactor(0.5)
                                 .multilineTextAlignment(.center)
@@ -40,7 +40,7 @@ struct QuoteView: View {
                                 .background(.black.opacity(0.5))
                                 .clipShape(.rect(cornerRadius: 25))
                                 .padding(.horizontal)
-                            
+
                             ZStack(alignment: .bottom) {
                                 AsyncImage(url: vm.character.images[0]) {
                                     image in
@@ -53,8 +53,7 @@ struct QuoteView: View {
                                     width: geo.size.width / 1.1,
                                     height: geo.size.height / 1.8
                                 )
-                                
-                                
+
                                 Text(vm.quote.character)
                                     .foregroundStyle(.white)
                                     .padding(10)
@@ -69,49 +68,78 @@ struct QuoteView: View {
                             .onTapGesture {
                                 showCharacterView.toggle()
                             }
-                            
+
+                        case .successEpisode:
+                            EpisodeView(episode: vm.episode)
+
                         case .failed(let error):
                             Text(error.localizedDescription)
                         }
-                        
-                        Spacer()
+
+                        Spacer(minLength: 20)
                     }
-                    
-                    Button {
-                        Task {
-                            await vm.getData(for: show)
-                        }
-                    } label: {
-                        Text("Get Random Quote")
-                            .font(.title)
-                            .foregroundStyle(.white)
-                            .padding()
-                            .background(
-                                Color(
-                                    "\(show.replacingOccurrences(of: " ", with: ""))Button"
+
+                    HStack {
+                        Button {
+                            Task {
+                                await vm.getQuateData(for: show)
+                            }
+                        } label: {
+                            Text("Get Random Quote")
+                                .font(.title3)
+                                .foregroundStyle(.white)
+                                .padding()
+                                .background(
+                                    Color(
+                                        "\(show.removeSpaces())Button"
+                                    )
                                 )
-                            )
-                            .clipShape(.rect(cornerRadius: 15))
-                            .shadow(
-                                color: Color(
-                                    "\(show.replacingOccurrences(of: " ", with: ""))Shadow"
-                                ), radius: 5)
+                                .clipShape(.rect(cornerRadius: 15))
+                                .shadow(
+                                    color: Color(
+                                        "\(show.removeSpaces())Shadow"
+                                    ), radius: 5)
+                        }
+
+                        Spacer()
+
+                        Button {
+                            Task {
+                                await vm.getEpisode(for: show)
+                            }
+                        } label: {
+                            Text("Get Random Episode")
+                                .font(.title3)
+                                .foregroundStyle(.white)
+                                .padding()
+                                .background(
+                                    Color(
+                                        "\(show.removeSpaces())Button"
+                                    )
+                                )
+                                .clipShape(.rect(cornerRadius: 15))
+                                .shadow(
+                                    color: Color(
+                                        "\(show.removeSpaces())Shadow"
+                                    ), radius: 5)
+                        }
                     }
-                    
+                    .padding(.horizontal, 30)
+
                     Spacer(minLength: 95)
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
-                
+
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
         .ignoresSafeArea()
-        .sheet(isPresented: $showCharacterView){
+        .sheet(isPresented: $showCharacterView) {
             CharacterView(character: vm.character, show: show)
         }
     }
 }
 
 #Preview {
-    QuoteView(show: "Breaking Bad").preferredColorScheme(.dark)
+    FetchView(show: Constants.bbName).preferredColorScheme(.dark)
 }
